@@ -1,0 +1,71 @@
+﻿<html>
+<head>
+	<script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
+    <script type="text/javascript" src="../jQuery.render.js" ></script>
+</head>
+<body>
+<h1>绑定数据源</h1>
+<input type="file" multiple="multiple"/>
+<br />
+文件列表：
+<div id="content"></div>
+<script type="text/jqtmpl" id="filetmpl">
+	文件个数：<%=length%>
+	<%for (var i=0;i<length;i++){var file=object[i]; %>
+		<li>文件名：<%=file.name%>&nbsp;&nbsp;大小：<%=file.size%>&nbsp;&nbsp;类型<%=file.type%></li>
+	<%}%>
+</script>
+<script type="text/jqtmpl" id="filetmpl_2">
+	<li>文件名：<%=name%>&nbsp;&nbsp;大小：<%=size%>&nbsp;&nbsp;类型：<%
+	switch(name.substr(name.length - 3, 3).toLowerCase()){
+		case "jpg":
+		case "gif":
+		case "bmp":
+			echo("图片");
+			break;
+		case "doc":
+		case "xls":
+		case "ocx":
+			echo("Word 文档");
+			break;
+		default:
+			echo(type);
+			break;
+	}	
+	%></li>
+</script>
+<input type="button" value="绑定JSON" id="bjson" />
+<div id="rows"></div>
+<script type="text/jqtmpl" id="rowstmpl">
+	数据数目：<%=length%>
+	<%for (var i=0;i<length;i++){var row=object[i]; %>
+		<li>用户ID：<%=row.ID%>&nbsp;&nbsp;登录名：<%=row.LoginName%>&nbsp;&nbsp;创建时间<%=row.Created%></li>
+	<%}%>
+</script>
+<script type="text/jqtmpl" id="rowstmpl_repeat">
+	<li>用户ID：<%=ID%>&nbsp;&nbsp;登录名：<%=LoginName%>&nbsp;&nbsp;创建时间<%=Created%></li>
+</script>
+
+<script>
+	$.render.tokenMode = "php";
+	document.getElementsByTagName('input')[0].onchange = function(){
+		$("#content").render(this.files || [this.value], $('#filetmpl'), {
+			onError:function(){
+				debugger;
+			},
+			mode: -1
+		});// $('#filetmpl'),-1);
+	};
+
+	$("#bjson").click(function(){
+	
+		$("#rows").render("data.txt", $('#rowstmpl') ,{ //
+			mode: -1
+			,onError: function(){
+				debugger;
+			}
+		});
+	});
+</script>
+</body>
+</html>
