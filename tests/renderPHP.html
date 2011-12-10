@@ -36,6 +36,7 @@
 </script>
 <input type="button" value="绑定JSON" id="bjson" />
 <div id="rows"></div>
+<div id="obj"></div>
 <script type="text/jqtmpl" id="rowstmpl">
 	数据数目：<%=length%>
 	<%for (var i=0;i<length;i++){var row=object[i]; %>
@@ -59,13 +60,19 @@
 
 	$("#bjson").click(function(){
 	
-		$("#rows").render("data.txt", $('#rowstmpl') ,{ //
-			mode: -1
-			,onError: function(){
+		$("#rows").render("data.txt", $('#rowstmpl_repeat') ,{
+			onError: function(){
 				debugger;
 			}
 		});
 	});
+	
+	$("#obj").render({
+		ID:'object id',
+		LoginName:'login name',
+		Created:new Date
+	}, $("#rowstmpl_repeat"));
+	
 </script>
 </body>
 </html>

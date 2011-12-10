@@ -5,6 +5,7 @@
 	isN = function (a) { return typeof a === "number" && window.isFinite(a) },
 	isFunc = function (a) { return typeof a === "function" },
 	isStr = function (a) { return typeof a === "string" },
+	isArray = function (a) { return a && typeof a === "object" && typeof a.length == "number" && typeof a.splice == "function" && !a.propertyIsEnumerable("length") },
 	renderMode = {
 		  "array": 0				// 数组、集合，循环模板呈现
 		, "arrayLike": 1			// 类似 array 的对象（之后会将其构建为真正的 array）
@@ -24,7 +25,7 @@
 	tokenModes.aspx = tokenModes.jsp;
 	
 	function templateEngine(elem, data) {
-			var tokens = tokenModes[$.render.tokenMode]
+			var tokens = tokenModes[$.render.tokenMode];
 			function buildFn(html) {
 				return new Function("object",
 					"var ___p=[],echo=function(){___p.push.apply(___p,arguments);};" +
@@ -47,7 +48,7 @@
 	function Render(elem, data, options) {
 		var self = this, fire = $(this);
 
-		options = $.extend({ mode: 0, autoRender: true }, options);
+		options = $.extend({autoRender: true }, options);
 		options.ajax = isStr(data) ? true : false;
 		options.tmplEngine = null;
 
@@ -68,15 +69,7 @@
 		
 		function repeat(opts, data, mode) {
 			var tmpl = opts.tmplEngine || (opts.tmplEngine = templateEngine(opts.template));
-			
-			mode = isUndef(mode) ? opts.mode : mode;
-			if (isUndef(mode)) {
-				mode = 0; 
-			} else if (isStr(mode)) {
-				mode = isUndef(renderMode[mode]) ? 0 : renderMode[mode]; 
-			}
 
-			(mode == 1 && (data = $.makeArray(data))) || (mode == 2 && (data = [].slice.apply(data)));
 			return mode < 0 ? tmpl(data) : (function () {
 				var i, html = [];
 				for (i = 0; i < data.length; i++) {
@@ -89,14 +82,26 @@
 		this.element = elem;
 		this.data = data;
 		this.render = function (data, mode) {
-			if(isN(data) && isUndef(mode)){
+			var ret, dMode;
+			if (isN(data) && isUndef(mode)){
 				mode = data; 
-				data = self.data;
+				data = this.data;
 			}else{
-				data = data || self.data;
+				data = data || this.data;
+				if(!this.data){
+					this.data = data;
+				}
 			}
-			mode = isUndef(mode) ? options.mode : mode;
-			var ret;
+			
+			dMode = typeof data === "object" ? (isArray(data) ? 0 : -1) : 0;
+			function prep(m){
+				return isN(m) ? m : ((!isUndef(renderMode[m]) && renderMode[m]) ||  dMode);
+			}				
+			isUndef(mode) ? (mode = options.mode) : (isUndef(options.mode) && (options.mode = mode));
+			mode = prep(mode);
+			options.mode = prep(options.mode);
+			(mode === 1 && (data = $.makeArray(data))) || (mode === 2 && (data = [].slice.apply(data)));
+			
 			try {
 				ret = repeat(options, data, mode);
 			} catch (x) { 
@@ -104,7 +109,6 @@
 				return; 
 			}
 			if (trigger("onBeforeRender", [ret, data, options, mode])) {
-				this.data = data;
 				this.element.html(ret);
 				trigger("onRender", [ret, data, options, mode]);
 			}
@@ -153,12 +157,17 @@
 	};
 	$.render.tokenMode = "aspx";			// the default token mode
 	$.render.fromTmpl = function (str) {
+		function wrappTokens(s){
+			var tokens = tokenModes[$.render.tokenMode];
+			return tokens.start + s + tokens.end;
+		}
+		
 		return str
 			.replace(/\$\{([^\}]*)\}/g, "{{html $1}}")
-			.replace(/\{\{\/if\}\}/g, "<?}?>")
-			.replace(/\{\{if\s+(?:\(?((?:[^\}]|\}(?!\}))*?)\)?)\s*\}\}/g, "<?if($1){?>")
-			.replace(/\{\{else\s*\}\}/g, "<?}else{?>")
-			.replace(/\{\{else\s+(?:\(?((?:[^\}]|\}(?!\}))*?)\)?)\s*\}\}/g, "<?}else if($1){?>")
-			.replace(/\{\{(?:html|=)\s+(?:\(?((?:[^\}]|\}(?!\}))*)\)?)\s*\}\}/g, "<?=$1?>");
+			.replace(/\{\{\/if\}\}/g, wrappTokens("}"))
+			.replace(/\{\{if\s+(?:\(?((?:[^\}]|\}(?!\}))*?)\)?)\s*\}\}/g, wrappTokens("if($1){"))
+			.replace(/\{\{else\s*\}\}/g, wrappTokens("}else{"))
+			.replace(/\{\{else\s+(?:\(?((?:[^\}]|\}(?!\}))*?)\)?)\s*\}\}/g, wrappTokens("}else if($1){"))
+			.replace(/\{\{(?:html|=)\s+(?:\(?((?:[^\}]|\}(?!\}))*)\)?)\s*\}\}/g, wrappTokens("=$1"));
 	};
 })(jQuery);
