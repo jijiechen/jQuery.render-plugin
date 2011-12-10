@@ -24,7 +24,7 @@
 	};
 	tokenModes.aspx = tokenModes.jsp;
 	
-	function templateEngine(elem, data) {
+	function templateEngine(elem) {
 			var tokens = tokenModes[$.render.tokenMode];
 			function buildFn(html) {
 				return new Function("object",
@@ -42,7 +42,7 @@
 					+ "');}return ___p.join('');");
 			}
 			var tmplAttr = "rendertmpl", id, fn = isStr(elem) ? buildFn(elem) : (elem = $(elem), id = elem.attr(tmplAttr)) && cache[id] ? cache[id] : elem.attr(tmplAttr, id = 'tmpl_' + Number(new Date)) && (cache[id] = buildFn(elem.html()));
-			return data ? fn(data) : fn;
+			return fn;
 	}
 	
 	function Render(elem, data, options) {
@@ -52,7 +52,7 @@
 		options.ajax = isStr(data) ? true : false;
 		options.tmplEngine = null;
 
-		$.each("onBeforeLoad,onBeforeRender,onLoad,onRender,onError,onRender".split(','), function (i, event) {
+		$.each("onBeforeLoad,onBeforeRender,onLoad,onRender,onError".split(','), function (i, event) {
 			self[event] = function (fn) {
 				fire.bind(event, fn);
 			};
@@ -153,7 +153,7 @@
 		return this;
 	};
 	$.render = function (json, tmpl, options) {
-		return $("<div>").render(json, tmpl, options);
+		return $("<div>").render(json, tmpl, options).html();
 	};
 	$.render.tokenMode = "aspx";			// the default token mode
 	$.render.fromTmpl = function (str) {

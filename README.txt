@@ -1,6 +1,7 @@
-jQuery.render plugin is a jQuery templates rendering plugin.
+﻿jQuery.render plugin is a jQuery templates rendering plugin.
 
-// TODO: complete this file
+Them complete introduction of this plugin is available at http://blog.ciznx.com/projects/jQuery.render.doc-cn.html （currently in Chinese）
+jQuery.render 插件的完整文档，请访问 blog.ciznx.com/projects/jQuery.render.doc-cn.html（中文）
 
 
 Usage:
