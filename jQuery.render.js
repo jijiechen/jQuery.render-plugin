@@ -57,19 +57,17 @@
 			
 			var tmplAttr = "rendertmpl", id, fn, html, rand = (+ new Date), vname = '__p' + rand;  // use a random variable name,  http://www.planeart.cn/?p=1594
 			fn = isStr(elem) ? (html = elem, buildFn()) : (elem = $(elem), id = elem.attr(tmplAttr)) && cache[id] ? cache[id] : elem.attr(tmplAttr, id = 'tmpl_' + rand) && (html = elem.html(), cache[id] = buildFn());
-			fn.code = (!isStr(elem) && cache[id].code) || "var " + vname + "=[],echo=function(){"+ vname +".push.apply("+ vname +",arguments);};"
-				+vname+".push('" +					// modified 'object' to 'this'
-				html
-				  .replace(/(\\)/g,"\\\\")			// #BUG fixed: can not process slashes
-				  .replace(/(\<\s*\/[^>]+\>)[\n\r\t\s]+(?=\<[^>]+\>)/g, "$1")			// 注意，将所有换行、TAB替换，会对HTML格式产生不可控的影响？且要求模板 Javascript 没有注释、分号齐全
-				  .replace(/[\r\n\t]/g,"")
-				  .split(tokens.start).join("\t")
-				  .replace(new RegExp("((^|\\" + tokens.end +")[^\t]*)'",'g'), "$1\r")
-				  .replace(new RegExp("\t=(.*?)\\" + tokens.end,'g'), "',$1,'")
-				  .split("\t").join("');")
-				  .split(tokens.end).join( vname +".push('")
-				  .split("\r").join("\\'")
-			+ "');return "+ vname +".join('');";
+			fn.code = (!isStr(elem) && cache[id].code) || "var " + vname + "=[],echo=function(){"+ vname +".push.apply("+ vname +",arguments);};"+vname+".push('" +					// modified 'object' to 'this'
+				html.replace(/(\\)/g,"\\\\")			// #BUG fixed: can not process slashes
+					  .replace(/(\<\s*\/[^>]+\>)[\n\r\t\s]+(?=\<[^>]+\>)/g, "$1")			// 注意，将所有换行、TAB替换，会对HTML格式产生不可控的影响？且要求模板 Javascript 没有注释、分号齐全
+					  .replace(/[\r\n\t]/g,"")
+					  .split(tokens.start).join("\t")
+					  .replace(new RegExp("((^|\\" + tokens.end +")[^\t]*)'",'g'), "$1\r")
+					  .replace(new RegExp("\t=(.*?)\\" + tokens.end,'g'), "',$1,'")
+					  .split("\t").join("');")
+					  .split(tokens.end).join( vname +".push('")
+					  .split("\r").join("\\'")
+				+ "');return "+ vname +".join('');";
 			return fn;
 	}
 	
