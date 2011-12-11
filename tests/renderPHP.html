@@ -2,6 +2,11 @@
 <head>
 	<script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
     <script type="text/javascript" src="../jQuery.render.js" ></script>
+	<script>
+		function createNow(org){
+			return " Created at " + (+ new Date) + ', org at ' + org;
+		}
+	</script>
 </head>
 <body>
 <h1>绑定数据源</h1>
@@ -10,8 +15,8 @@
 文件列表：
 <div id="content"></div>
 <script type="text/jqtmpl" id="filetmpl">
-	文件个数：<%=length%>
-	<%for (var i=0;i<length;i++){var file=object[i]; %>
+	文件个数：\\\\\\\\\\\\\\\\\\<%=length%>
+	<%for (var i=0;i<length;i++){var file=this[i]; %>
 		<li>文件名：<%=file.name%>&nbsp;&nbsp;大小：<%=file.size%>&nbsp;&nbsp;类型<%=file.type%></li>
 	<%}%>
 </script>
@@ -39,12 +44,13 @@
 <div id="obj"></div>
 <script type="text/jqtmpl" id="rowstmpl">
 	数据数目：<%=length%>
-	<%for (var i=0;i<length;i++){var row=object[i]; %>
+	<%for (var i=0;i<length;i++){var row=this[i]; %>
 		<li>用户ID：<%=row.ID%>&nbsp;&nbsp;登录名：<%=row.LoginName%>&nbsp;&nbsp;创建时间<%=row.Created%></li>
 	<%}%>
 </script>
 <script type="text/jqtmpl" id="rowstmpl_repeat">
-	<li>用户ID：<%=ID%>&nbsp;&nbsp;登录名：<%=LoginName%>&nbsp;&nbsp;创建时间<%=Created%></li>
+	<li>用户ID：<%=ID%>&nbsp;&nbsp;登录名：<%=LoginName%>&nbsp;&nbsp;创建时间<%=createNow(Created)%></li>    
+	<span>some span</span>
 </script>
 
 <script>
@@ -70,6 +76,12 @@
 	$("#obj").render({
 		ID:'object id',
 		LoginName:'login name',
+		Created:new Date
+	}, $("#rowstmpl_repeat"));
+	
+	$("#obj").render({
+		ID:'object id extra',
+		LoginName:'login name 2',
 		Created:new Date
 	}, $("#rowstmpl_repeat"));
 	

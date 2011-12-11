@@ -25,23 +25,51 @@
 	tokenModes.aspx = tokenModes.jsp;
 	
 	function templateEngine(elem) {
-			var tokens = tokenModes[$.render.tokenMode];
-			function buildFn(html) {
-				return new Function("object",
-					"var ___p=[],echo=function(){___p.push.apply(___p,arguments);};" +
-
-					"with(object){___p.push('" +
-					html
-					  .replace(/[\r\t\n]/g, " ")			// 注意，将所有换行、TAB替换成空格，会对HTML格式产生不可控的影响？且要求模板 Javascript 没有注释、分号齐全
-					  .split(tokens.start).join("\t")
-					  .replace(new RegExp("((^|\\" + tokens.end +")[^\t]*)'",'g'), "$1\r")
-					  .replace(new RegExp("\t=(.*?)\\" + tokens.end,'g'), "',$1,'")
-					  .split("\t").join("');")
-					  .split(tokens.end).join("___p.push('")
-					  .split("\r").join("\\'")
-					+ "');}return ___p.join('');");
+			var tokens = tokenModes[$.render.tokenMode], code;
+			function buildFn() {
+				return function(data){			
+					var key, keys=[], values = [];
+					
+					function isIlegal(name){
+							if(/^[\d]/.test(name)){
+								return false;
+							}
+							if(!(/^[\$a-z_][a-z\$0-9_]*/i).test(name)){
+								return false;
+							}
+							if( (/^(break|case|catch|continue|debugger|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|var|void|while|with)$/)
+							.test(name)){
+								return false;
+							}
+							return true;
+					}
+					
+					for(key in data){
+						if( isIlegal(key) ){
+							keys.push(key);
+							values.push(data[key]);
+						}
+					}
+					
+					return new Function(keys, arguments.callee.code).apply(data,values);
+				};
 			}
-			var tmplAttr = "rendertmpl", id, fn = isStr(elem) ? buildFn(elem) : (elem = $(elem), id = elem.attr(tmplAttr)) && cache[id] ? cache[id] : elem.attr(tmplAttr, id = 'tmpl_' + Number(new Date)) && (cache[id] = buildFn(elem.html()));
+			
+			var tmplAttr = "rendertmpl", id, fn, html, rand = (+ new Date), vname = '__p' + rand;  // use a random variable name,  http://www.planeart.cn/?p=1594
+			fn = isStr(elem) ? (html = elem, buildFn()) : (elem = $(elem), id = elem.attr(tmplAttr)) && cache[id] ? cache[id] : elem.attr(tmplAttr, id = 'tmpl_' + rand) && (html = elem.html(), cache[id] = buildFn());
+			fn.code = (!isStr(elem) && cache[id].code) || "var " + vname + "=[],echo=function(){"+ vname +".push.apply("+ vname +",arguments);};"
+				+vname+".push('" +					// modified 'object' to 'this'
+				html
+				  .replace(/(\\)/g,"\\\\")			// #BUG fixed: can not process slashes
+				  .replace(/(\<\s*\/[^>]+\>)[\n\r\t\s]+(?=\<[^>]+\>)/g, "$1")			// 注意，将所有换行、TAB替换，会对HTML格式产生不可控的影响？且要求模板 Javascript 没有注释、分号齐全
+				  .replace(/[\r\n\t]/g,"")
+				  .split(tokens.start).join("\t")
+				  .replace(new RegExp("((^|\\" + tokens.end +")[^\t]*)'",'g'), "$1\r")
+				  .replace(new RegExp("\t=(.*?)\\" + tokens.end,'g'), "',$1,'")
+				  .split("\t").join("');")
+				  .split(tokens.end).join( vname +".push('")
+				  .split("\r").join("\\'")
+			+ "');return "+ vname +".join('');";
 			return fn;
 	}
 	
@@ -111,6 +139,7 @@
 			if (trigger("onBeforeRender", [ret, data, options, mode])) {
 				this.element.html(ret);
 				trigger("onRender", [ret, data, options, mode]);
+				// delete options.tmplEngine;
 			}
 			return ret;
 		};
