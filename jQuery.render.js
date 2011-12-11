@@ -145,8 +145,8 @@
 	
 	$.fn.render = function (data, template, options) {
 		var isTmpl = isStr(template) || !isUndef(template.jquery) || !isUndef(template.nodeType); 	// 如果为 字符串[模板字面值] 或者 jQuery 或者为 DOM [取模板来源DOM]，认为是模板
+		if (isN(options) || isStr(options)) { options = { mode: options} }
 		options = options || {};
-		if (isN(options)) { options = { mode: options} }
 		isTmpl ? (options.template = template) : (options = $.extend(template, options));
 
 		this.data("renderHandler", new Render(this, data, options));
