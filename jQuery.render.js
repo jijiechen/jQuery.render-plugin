@@ -62,7 +62,7 @@
 					  .replace(/(\<\s*\/[^>]+\>)[\n\r\t\s]+(?=\<[^>]+\>)/g, "$1")			// 注意，将所有换行、TAB替换，会对HTML格式产生不可控的影响？且要求模板 Javascript 没有注释、分号齐全
 					  .replace(/[\r\n\t]/g,"")
 					  .split(tokens.start).join("\t")
-					  .replace(new RegExp("((^|\\" + tokens.end +")[^\t]*)'",'g'), "$1\r")
+					  .replace(new RegExp("((^|\\" + tokens.end + ")[^\t]*)'", 'g'), function (a) { return a.replace(/(')/g, "\r") }) // #BUG fixed: can not process multi qoutes
 					  .replace(new RegExp("\t=(.*?)\\" + tokens.end,'g'), "',$1,'")
 					  .split("\t").join("');")
 					  .split(tokens.end).join( vname +".push('")
